@@ -1,24 +1,14 @@
-# =============== #
-# Unity generated #
-# =============== #
-Temp/
-topia_Data/
-game_Data/
-Assets/3rdParty/
-/Library/
-
 # ===================================== #
 # Visual Studio / MonoDevelop generated #
 # ===================================== #
 ExportedObj/
 .vs/
 obj/
+bin/
 *.svd
 *.userprefs
-/*.csproj
 *.pidb
 *.suo
-/*.sln
 *.user
 *.unityproj
 *.booproj
