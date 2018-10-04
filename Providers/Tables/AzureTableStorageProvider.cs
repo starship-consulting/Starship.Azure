@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CrowdCode.Library.OData.Query;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Starship.Azure.Interfaces;
+using Starship.Data.OData;
 
 namespace Starship.Azure.Providers.Tables {
     public class AzureTableStorageProvider : IsDataProvider {

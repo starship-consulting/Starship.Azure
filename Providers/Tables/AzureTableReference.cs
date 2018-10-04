@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using Microsoft.WindowsAzure.Storage.Table;
-using Starship.Azure.Interfaces;
-using Starship.Azure.OData;
+using Starship.Data.OData;
 
 namespace Starship.Azure.Providers.Tables {
+
     public class AzureTableReference : IsQueryInvoker {
+
         public AzureTableReference(CloudTable table) {
             Entities = new List<ITableEntity>();
             Table = table;
