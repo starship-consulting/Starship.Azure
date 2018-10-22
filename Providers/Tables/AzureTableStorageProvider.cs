@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
-using Starship.Azure.Interfaces;
+using Starship.Core.Data;
 using Starship.Data.OData;
 
 namespace Starship.Azure.Providers.Tables {

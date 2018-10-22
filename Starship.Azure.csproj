@@ -113,7 +113,6 @@
     <Compile Include="Extensions\DbContextExtensions.cs" />
     <Compile Include="Extensions\DynamicTableEntityExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
-    <Compile Include="Interfaces\IsDataProvider.cs" />
     <Compile Include="Interfaces\IsPartitionedDataModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\AzureBlobProvider.cs" />

@@ -10,6 +10,10 @@ namespace Starship.Azure.Data {
             CreationDate = DateTime.UtcNow;
         }
 
+        public string GetId() {
+            return Id.ToString();
+        }
+
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 

@@ -2,11 +2,13 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Starship.Core.Data;
+using Starship.Core.Data.Storage;
 using Starship.Core.Extensions;
 using Starship.Core.Http;
 
 namespace Starship.Azure.Providers {
-    public class AzureBlobStorageContainer {
+    public class AzureBlobStorageContainer : IsStorageContainer {
         public AzureBlobStorageContainer(CloudBlobContainer container) {
             Container = container;
         }
@@ -25,10 +27,10 @@ namespace Starship.Azure.Providers {
             return Container.ListBlobs();
         }
 
-        public CloudBlockBlob Upload(string blobName, byte[] data) {
+        public UploadedFile Upload(string blobName, byte[] data) {
             var blob = Container.GetBlockBlobReference(blobName);
             blob.UploadFromByteArray(data, 0, data.Length);
-            return blob;
+            return new UploadedFile();
         }
 
         public async Task<CloudBlockBlob> UploadAsync(string blobName, byte[] data) {
