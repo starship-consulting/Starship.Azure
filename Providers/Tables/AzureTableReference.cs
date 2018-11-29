@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Table;
 using Starship.Data.OData;
 
@@ -12,19 +13,23 @@ namespace Starship.Azure.Providers.Tables {
         }
 
         public List<T> Get<T>(ODataQuery query) {
+            return GetAsync<T>(query).Result;
+        }
+
+        public async Task<List<T>> GetAsync<T>(ODataQuery query) {
             var tableQuery = new TableQuery();
             tableQuery.FilterString = query.Filter;
 
-            var results = Query(tableQuery);
+            var results = await QueryAsync(tableQuery);
             return AzureTableProvider.Convert<T>(results.ToArray());
         }
-
-        public List<DynamicTableEntity> Query(TableQuery query) {
+        
+        public async Task<List<DynamicTableEntity>> QueryAsync(TableQuery query) {
             TableQuerySegment<DynamicTableEntity> segment = null;
             var results = new List<DynamicTableEntity>();
 
             do {
-                segment = Table.ExecuteQuerySegmented(query, segment != null ? segment.ContinuationToken : null);
+                segment = await Table.ExecuteQuerySegmentedAsync(query, segment != null ? segment.ContinuationToken : null);
 
                 if (segment.Results.Count > 0) {
                     results.AddRange(segment.Results);
@@ -54,9 +59,9 @@ namespace Starship.Azure.Providers.Tables {
             return entity;
         }
 
-        public void Save() {
+        public async Task SaveAsync() {
             foreach (var entity in Entities) {
-                Table.Execute(TableOperation.InsertOrReplace(entity));
+                await Table.ExecuteAsync(TableOperation.InsertOrReplace(entity));
             }
         }
 

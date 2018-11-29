@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Starship.Core.Data;
@@ -8,6 +9,10 @@ using Starship.Data.OData;
 
 namespace Starship.Azure.Providers.Tables {
     public class AzureTableStorageProvider : IsDataProvider {
+
+        public AzureTableStorageProvider(string connectionstring)
+            : this(CloudStorageAccount.Parse(connectionstring)) {
+        }
 
         public AzureTableStorageProvider(CloudStorageAccount account) {
             Client = account.CreateCloudTableClient();
@@ -24,15 +29,19 @@ namespace Starship.Azure.Providers.Tables {
         }
 
         public void Save() {
+            SaveAsync().Wait();
+        }
+
+        public async Task SaveAsync() {
             foreach (var table in Tables) {
-                table.Value.Save();
+                await table.Value.SaveAsync();
             }
         }
 
         private AzureTableReference GetOrCreate<T>() {
             if (!Tables.ContainsKey(typeof(T))) {
                 var table = Client.GetTableReference(typeof(T).Name.ToLower());
-                table.CreateIfNotExists();
+                table.CreateIfNotExistsAsync().Wait();
                 Tables.Add(typeof(T), new AzureTableReference(table));
             }
 
