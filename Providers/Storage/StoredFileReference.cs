@@ -14,10 +14,6 @@ namespace Starship.Azure.Providers.Storage {
             Path = path;
         }
 
-        public void WriteTo(FileReference reference) {
-            reference.Path = Path;
-        }
-
         public string Path;
 
         public bool IsFolder { get; set; }

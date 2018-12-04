@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Starship.Core.Storage;
 
@@ -25,10 +24,9 @@ namespace Starship.Azure.Providers.Storage {
             }
 
             Path = string.Join("/", segments.Take(segments.Length - 1));
-            Name = segments.Last();
-            Url = blob.Uri.ToString();
+            //Name = segments.Last();
+            //Url = blob.Uri.ToString();
             LastModified = lastModified;
-            Exists = true;
             Blob = blob;
         }
 
@@ -37,13 +35,7 @@ namespace Starship.Azure.Providers.Storage {
             ContentType = blob.Properties.ContentType;
             Stream = stream;
         }
-
-        public override async Task<bool> DeleteAsync() {
-            await Blob.DeleteAsync();
-            Exists = false;
-            return true;
-        }
-
+        
         private ICloudBlob Blob { get; set; }
     }
 }

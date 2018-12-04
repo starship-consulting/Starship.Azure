@@ -21,6 +21,14 @@ namespace Starship.Azure.Providers.Storage {
             Containers = new Dictionary<string, CloudBlobContainer>();
         }
 
+        public void Rename(string partition, string path, string name) {
+            throw new System.NotImplementedException();
+        }
+
+        public void CreateDirectories(string partition, string path) {
+            throw new System.NotImplementedException();
+        }
+
         public async Task<FileReference> UploadAsync(string container, Stream stream, string path) {
             var blob = GetContainer(container).GetBlockBlobReference(path);
             await blob.UploadFromStreamAsync(stream);
