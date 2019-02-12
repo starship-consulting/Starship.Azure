@@ -15,6 +15,7 @@ namespace Starship.Azure.Providers.Cosmos {
             DatabaseName = databaseName;
             Collection = collection;
             Settings = settings;
+            Options = new FeedOptions { EnableCrossPartitionQuery = true };
         }
         
         public async Task<List<T>> CallProcedure<T>(string procedureName, List<Resource> parameters) {
@@ -35,7 +36,7 @@ namespace Starship.Azure.Providers.Cosmos {
         }
 
         public IOrderedQueryable<T> Get<T>() {
-            return Client.CreateDocumentQuery<T>(GetCollectionUri());
+            return Client.CreateDocumentQuery<T>(GetCollectionUri(), new FeedOptions { EnableCrossPartitionQuery = true });
         }
 
         public IEnumerable<Document> Get(int take = 0, SqlQuerySpec sqlQuery = null) {
@@ -43,10 +44,10 @@ namespace Starship.Azure.Providers.Cosmos {
             IQueryable<Document> query;
 
             if(sqlQuery != null) {
-                query = Client.CreateDocumentQuery<Document>(GetCollectionUri(), sqlQuery);
+                query = Client.CreateDocumentQuery<Document>(GetCollectionUri(), sqlQuery, Options);
             }
             else {
-                query = Client.CreateDocumentQuery<Document>(GetCollectionUri());
+                query = Client.CreateDocumentQuery<Document>(GetCollectionUri(), Options);
             }
             
             if(take > 0) {
@@ -65,28 +66,28 @@ namespace Starship.Azure.Providers.Cosmos {
         }
 
         public Document First() {
-            return Client.CreateDocumentQuery(GetCollectionUri()).Take(1).ToList().FirstOrDefault();
+            return Client.CreateDocumentQuery(GetCollectionUri(), Options).Take(1).ToList().FirstOrDefault();
         }
 
         public List<T> Get<T>(params string[] ids) where T : Resource {
-            return Client.CreateDocumentQuery<T>(GetCollectionUri()).Where(each => ids.Contains(each.Id)).ToList();
+            return Client.CreateDocumentQuery<T>(GetCollectionUri(), Options).Where(each => ids.Contains(each.Id)).ToList();
         }
 
         public T Find<T>(string id) where T : Resource {
-            return Client.CreateDocumentQuery<T>(GetCollectionUri()).Where(each => each.Id == id).ToList().FirstOrDefault();
+            return Client.CreateDocumentQuery<T>(GetCollectionUri(), Options).Where(each => each.Id == id).ToList().FirstOrDefault();
         }
 
         public Document Find(string id) {
-            return Client.CreateDocumentQuery(GetCollectionUri()).Where(each => each.Id == id).ToList().FirstOrDefault();
+            return Client.CreateDocumentQuery(GetCollectionUri(), Options).Where(each => each.Id == id).ToList().FirstOrDefault();
         }
 
         public IEnumerable<dynamic> Get(SqlQuerySpec sqlQuery) {
 
             if(sqlQuery != null) {
-                return Client.CreateDocumentQuery(GetCollectionUri(), sqlQuery);
+                return Client.CreateDocumentQuery(GetCollectionUri(), sqlQuery, Options);
             }
 
-            return Client.CreateDocumentQuery(GetCollectionUri());
+            return Client.CreateDocumentQuery(GetCollectionUri(), Options);
         }
 
         public Uri GetDocumentUri(string id = "") {
@@ -104,5 +105,7 @@ namespace Starship.Azure.Providers.Cosmos {
         private DocumentClient Client { get; set; }
 
         private JsonSerializerSettings Settings { get; set; }
+
+        private FeedOptions Options { get; set; }
     }
 }
