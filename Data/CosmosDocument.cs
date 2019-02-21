@@ -13,5 +13,8 @@ namespace Starship.Azure.Data {
 
         [JsonProperty(PropertyName = "$type")]
         public string Type { get; set; }
+
+        [JsonProperty(PropertyName="creationDate")]
+        public DateTime? CreationDate { get; set; }
     }
 }

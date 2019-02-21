@@ -66,6 +66,10 @@ namespace Starship.Azure.Providers.Storage {
             return new AzureBlobFileReference(reference, stream);
         }
 
+        public string GetDefaultPartitionName() {
+            throw new System.NotImplementedException();
+        }
+
         private CloudBlobContainer GetContainer(string containerName) {
             if (!Containers.ContainsKey(containerName)) {
                 Containers.Add(containerName, GetClient().GetContainerReference(containerName));
