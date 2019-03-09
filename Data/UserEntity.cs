@@ -19,6 +19,9 @@ namespace Starship.Azure.Data {
         [JsonProperty(PropertyName="lastLogin")]
         public DateTime LastLogin { get; set; }
 
+        [JsonProperty(PropertyName="subscriptionEndDate")]
+        public DateTime SubscriptionEndDate { get; set; }
+
         [JsonProperty(PropertyName="signature")]
         public string Signature { get; set; }
     }
