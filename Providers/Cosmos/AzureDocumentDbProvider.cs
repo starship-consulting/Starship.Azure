@@ -26,6 +26,32 @@ namespace Starship.Azure.Providers.Cosmos {
 
             DefaultCollection = GetCollectionAsync(settings.Container).Result;
         }
+
+        public async Task<List<Document>> GetLog(DateTime startDate) {
+
+            var collection = await GetCollectionAsync(Settings.Container);
+
+            var uri = collection.GetCollectionUri();
+
+            var feed = await Client.ReadPartitionKeyRangeFeedAsync(uri, new FeedOptions {
+                RequestContinuation = string.Empty,
+                EnableCrossPartitionQuery = true
+            });
+            
+            var changeFeedQuery = Client.CreateDocumentChangeFeedQuery(uri, new ChangeFeedOptions {
+                StartTime = startDate,
+                PartitionKeyRangeId = feed.First().Id
+            });
+
+            var documents = new List<Document>();
+
+            while (changeFeedQuery.HasMoreResults) {
+                var response = await changeFeedQuery.ExecuteNextAsync<Document>();
+                documents.AddRange(response);
+            }
+
+            return documents;
+        }
         
         public IEnumerable<string> GetCollections() {
             var collections = Client.CreateDocumentCollectionQuery(DatabaseUri);
@@ -74,14 +100,14 @@ namespace Starship.Azure.Providers.Cosmos {
         public CosmosDbSettings Settings { get; set; }
 
         public AzureDocumentCollection DefaultCollection { get; set; }
+
+        public DocumentClient Client { get; private set; }
         
         private JsonSerializerSettings SerializerSettings { get; set; }
 
         private string DatabaseName { get; set; }
 
         private Uri DatabaseUri { get; set; }
-
-        private DocumentClient Client { get; set; }
 
         private static readonly Dictionary<string, AzureDocumentCollection> Collections = new Dictionary<string, AzureDocumentCollection>();
 
