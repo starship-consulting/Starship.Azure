@@ -16,5 +16,11 @@ namespace Starship.Azure.Data {
 
         [JsonProperty(PropertyName="creationDate")]
         public DateTime? CreationDate { get; set; }
+
+        [JsonProperty(PropertyName="externalId")]
+        public string ExternalId { get; set; }
+
+        [JsonProperty(PropertyName="importDate")]
+        public DateTime? ImportDate { get; set; }
     }
 }

@@ -8,15 +8,21 @@ using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
 using Starship.Azure.Json;
 using Starship.Core.Extensions;
+using Starship.Data.Configuration;
 
 namespace Starship.Azure.Providers.Cosmos {
     public class AzureDocumentDbProvider {
         
-        public AzureDocumentDbProvider(CosmosDbSettings settings) {
+        public AzureDocumentDbProvider(DataSettings settings) {
 
             Settings = settings;
             ForceCamelcase = true;
-            Client = new DocumentClient(new Uri(settings.Uri), settings.Key);
+
+            Client = new DocumentClient(new Uri(settings.Uri), settings.Key, new ConnectionPolicy {
+                ConnectionMode = ConnectionMode.Direct,
+                ConnectionProtocol = Protocol.Tcp
+            });
+
             DatabaseName = settings.Database;
             DatabaseUri = UriFactory.CreateDatabaseUri(DatabaseName);
 
@@ -97,11 +103,9 @@ namespace Starship.Azure.Providers.Cosmos {
         
         public bool ForceCamelcase { get; set; }
 
-        public CosmosDbSettings Settings { get; set; }
+        public DataSettings Settings { get; set; }
 
         public AzureDocumentCollection DefaultCollection { get; set; }
-
-        public DocumentClient Client { get; private set; }
         
         private JsonSerializerSettings SerializerSettings { get; set; }
 
@@ -114,5 +118,7 @@ namespace Starship.Azure.Providers.Cosmos {
         private static readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1, 1);
 
         private const int MinimumThroughput = 400;
+
+        private static DocumentClient Client { get; set; }
     }
 }

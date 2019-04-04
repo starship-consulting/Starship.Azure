@@ -259,7 +259,7 @@
     <Compile Include="Providers\AzureTableProvider.cs" />
     <Compile Include="Providers\Cosmos\AzureDocumentCollection.cs" />
     <Compile Include="Providers\Cosmos\AzureDocumentDbProvider.cs" />
-    <Compile Include="Providers\Cosmos\CosmosDbSettings.cs" />
+    <Compile Include="Providers\Cosmos\BulkDeletionState.cs" />
     <Compile Include="Providers\InMemoryTableStorage.cs" />
     <Compile Include="Providers\Storage\AzureBlobStorageProvider.cs" />
     <Compile Include="Providers\Storage\AzureBlobFileReference.cs" />

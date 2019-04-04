@@ -18,10 +18,29 @@ namespace Starship.Azure.Providers.Cosmos {
             Options = new FeedOptions { EnableCrossPartitionQuery = true };
         }
         
+        public async Task BulkDelete() {
+            BulkDeletionState state;
+
+            do {
+                state = await BulkDelete("SELECT c._self FROM c");
+            }
+            while(state.Continuation);
+        }
+
+        public async Task<BulkDeletionState> BulkDelete(string query) {
+            var procedure = await CallProcedure<BulkDeletionState>("bulkDelete", query);
+            return procedure.Response;
+        }
+        
         public async Task<List<T>> CallProcedure<T>(string procedureName, List<Resource> parameters) {
             var uri = UriFactory.CreateStoredProcedureUri(DatabaseName, Collection.Id, procedureName);
             var result = await Client.ExecuteStoredProcedureAsync<string>(uri, parameters);
             return JsonConvert.DeserializeObject<List<T>>(result.Response);
+        }
+
+        public async Task<StoredProcedureResponse<T>> CallProcedure<T>(string procedureName, string parameter) {
+            var uri = UriFactory.CreateStoredProcedureUri(DatabaseName, Collection.Id, procedureName);
+            return await Client.ExecuteStoredProcedureAsync<T>(uri, parameter);
         }
 
         public async Task<List<Document>> CallProcedure(string procedureName, string partitionKey, List<Document> parameters) {
