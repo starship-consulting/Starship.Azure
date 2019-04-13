@@ -1,9 +1,15 @@
 ﻿using System;
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
+using Starship.Core.Security;
+using Starship.Data.Configuration;
 
 namespace Starship.Azure.Data {
-    public class CosmosResource : Resource {
+    /*public class CosmosResource : Resource {
+
+        public bool IsSystemData() {
+            return Owner == GlobalDataSettings.SystemOwnerName;
+        }
 
         [JsonProperty(PropertyName="owner")]
         public string Owner { get; set; }
@@ -14,13 +20,13 @@ namespace Starship.Azure.Data {
         [JsonProperty(PropertyName = "$type")]
         public string Type { get; set; }
 
-        [JsonProperty(PropertyName="creationDate")]
+        [Secure, JsonProperty(PropertyName="creationDate")]
         public DateTime? CreationDate { get; set; }
 
-        [JsonProperty(PropertyName="externalId")]
+        [Secure, JsonProperty(PropertyName="externalId")]
         public string ExternalId { get; set; }
 
-        [JsonProperty(PropertyName="importDate")]
+        [Secure, JsonProperty(PropertyName="importDate")]
         public DateTime? ImportDate { get; set; }
-    }
+    }*/
 }

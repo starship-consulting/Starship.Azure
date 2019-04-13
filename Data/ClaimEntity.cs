@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Starship.Data.AccessControl;
 
 namespace Starship.Azure.Data {
-    public class ClaimEntity : CosmosResource {
+    public class ClaimEntity : CosmosDocument {
 
         public ClaimEntity() {
             Type = "claim";
@@ -16,15 +16,27 @@ namespace Starship.Azure.Data {
         }
 
         [JsonProperty(PropertyName="name")]
-        public string Name { get; set; }
+        public string Name {
+            get => GetPropertyValue<string>("name");
+            set => SetPropertyValue("name", value);
+        }
 
         [JsonProperty(PropertyName="value")]
-        public string Value { get; set; }
+        public string Value {
+            get => GetPropertyValue<string>("value");
+            set => SetPropertyValue("value", value);
+        }
 
         [JsonProperty(PropertyName="status")]
-        public int Status { get; set; }
+        public int Status {
+            get => GetPropertyValue<int>("status");
+            set => SetPropertyValue("status", value);
+        }
 
         [JsonProperty(PropertyName="level")]
-        public AccessControlLevels Level { get; set; }
+        public AccessControlLevels Level {
+            get => GetPropertyValue<AccessControlLevels>("level");
+            set => SetPropertyValue("level", value);
+        }
     }
 }

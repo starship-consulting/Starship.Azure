@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Starship.Core.Security;
 
 namespace Starship.Azure.Data {
-    public class Account : CosmosResource {
+    public class Account : CosmosDocument {
         
-        public Account() {
-            clientSettings = new Dictionary<string, string>();
-        }
-
         public bool IsAdmin() {
 
             if(string.IsNullOrEmpty(Role)) {
@@ -18,33 +15,105 @@ namespace Starship.Azure.Data {
             return Role.ToLower() == "admin";
         }
         
-        [JsonProperty(PropertyName="email")]
-        public string Email { get; set; }
+        public PermissionTypes GetPermission(CosmosDocument entity) {
+            
+            if(entity == null) {
+                return PermissionTypes.Full;
+            }
+
+            var permission = PermissionTypes.Full;
+
+            if(entity.Type == "account") {
+                permission = PermissionTypes.Partial;
+            }
+
+            if(string.IsNullOrEmpty(entity.Id) || string.IsNullOrEmpty(entity.Owner)) {
+                return PermissionTypes.Full;
+            }
+            
+            if(IsAdmin() || entity.Id == Id || entity.Owner == Id || entity.IsSystemData()) {
+                return permission;
+            }
+            
+            return PermissionTypes.None;
+        }
+        
+        [Secure, JsonProperty(PropertyName="email")]
+        public string Email {
+            get => GetPropertyValue<string>("email");
+            set => SetPropertyValue("email", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="chargeBeeId")]
+        public string ChargeBeeId {
+            get => GetPropertyValue<string>("chargeBeeId");
+            set => SetPropertyValue("chargeBeeId", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="outboundEmail")]
+        public string OutboundEmail {
+            get => GetPropertyValue<string>("outboundEmail");
+            set => SetPropertyValue("outboundEmail", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="outboundEmailId")]
+        public int OutboundEmailId {
+            get => GetPropertyValue<int>("outboundEmailId");
+            set => SetPropertyValue("outboundEmailId", value);
+        }
+
+        [JsonProperty(PropertyName="outboundEmailBCC")]
+        public bool OutboundEmailBCC {
+            get => GetPropertyValue<bool>("outboundEmailBCC");
+            set => SetPropertyValue("outboundEmailBCC", value);
+        }
 
         [JsonProperty(PropertyName="firstName")]
-        public string FirstName { get; set; }
+        public string FirstName {
+            get => GetPropertyValue<string>("firstName");
+            set => SetPropertyValue("firstName", value);
+        }
 
         [JsonProperty(PropertyName="lastName")]
-        public string LastName { get; set; }
+        public string LastName {
+            get => GetPropertyValue<string>("lastName");
+            set => SetPropertyValue("lastName", value);
+        }
 
         [JsonProperty(PropertyName="photo")]
-        public string Photo { get; set; }
+        public string Photo {
+            get => GetPropertyValue<string>("photo");
+            set => SetPropertyValue("photo", value);
+        }
 
-        [JsonProperty(PropertyName="lastLogin")]
-        public DateTime LastLogin { get; set; }
+        [Secure, JsonProperty(PropertyName="lastLogin")]
+        public DateTime LastLogin {
+            get => GetPropertyValue<DateTime>("lastLogin");
+            set => SetPropertyValue("lastLogin", value);
+        }
 
-        [JsonProperty(PropertyName="isTrial")]
-        public bool IsTrial { get; set; }
+        [Secure, JsonProperty(PropertyName="isTrial")]
+        public bool IsTrial {
+            get => GetPropertyValue<bool>("isTrial");
+            set => SetPropertyValue("isTrial", value);
+        }
 
-        [JsonProperty(PropertyName="subscriptionEndDate")]
-        public DateTime SubscriptionEndDate { get; set; }
+        [Secure, JsonProperty(PropertyName="subscriptionEndDate")]
+        public DateTime SubscriptionEndDate {
+            get => GetPropertyValue<DateTime>("subscriptionEndDate");
+            set => SetPropertyValue("subscriptionEndDate", value);
+        }
 
-        [JsonProperty(PropertyName="signature")]
-        public string Signature { get; set; }
+        [Secure, JsonProperty(PropertyName="signature")]
+        public string Signature {
+            get => GetPropertyValue<string>("signature");
+            set => SetPropertyValue("signature", value);
+        }
 
-        [JsonProperty(PropertyName="role")]
-        public string Role { get; set; }
-        
-        public Dictionary<string, string> clientSettings { get; set; }
+        [Secure, JsonProperty(PropertyName="role")]
+        public string Role {
+            get => GetPropertyValue<string>("role");
+            set => SetPropertyValue("role", value);
+        }
     }
 }

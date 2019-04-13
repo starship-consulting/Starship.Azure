@@ -50,12 +50,21 @@ namespace Starship.Azure.Providers.Cosmos {
         }
 
         public async Task<Document> SaveAsync(object entity) {
+            
+            /*if(entity is Document) {
+                throw new Exception("Never save objects inheriting from Document!  Data corruption will occur.");
+            }*/
+
             var result = await Client.UpsertDocumentAsync(GetDocumentUri(), entity, new RequestOptions { JsonSerializerSettings = Settings });
             return result.Resource;
         }
 
         public IOrderedQueryable<T> Get<T>() {
-            return Client.CreateDocumentQuery<T>(GetCollectionUri(), new FeedOptions { EnableCrossPartitionQuery = true });
+            return Client.CreateDocumentQuery<T>(GetCollectionUri(), new FeedOptions { EnableCrossPartitionQuery = true, MaxItemCount = -1 });
+        }
+
+        public IOrderedQueryable<dynamic> Get() {
+            return Client.CreateDocumentQuery<dynamic>(GetCollectionUri(), new FeedOptions { EnableCrossPartitionQuery = true });
         }
 
         public IEnumerable<Document> Get(int take = 0, SqlQuerySpec sqlQuery = null) {

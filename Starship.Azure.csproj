@@ -230,11 +230,11 @@
     <Compile Include="Converters\DynamicTableEntityConverter.cs" />
     <Compile Include="Data\BaseEntity.cs" />
     <Compile Include="Data\CosmosEvent.cs" />
+    <Compile Include="Data\CosmosDocument.cs" />
     <Compile Include="Data\CosmosResource.cs" />
     <Compile Include="Data\PermissionEntity.cs" />
     <Compile Include="Data\ClaimEntity.cs" />
     <Compile Include="Data\Account.cs" />
-    <Compile Include="Data\CosmosDocument.cs" />
     <Compile Include="Data\DatabaseContext.cs" />
     <Compile Include="Data\DataContextProviderFactory.cs" />
     <Compile Include="Data\EntityFrameworkContextFactory.cs" />
@@ -285,6 +285,9 @@
       <Project>{5f849f48-9022-46af-909f-4d54d392ec95}</Project>
       <Name>Starship.Data</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Attributes\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
