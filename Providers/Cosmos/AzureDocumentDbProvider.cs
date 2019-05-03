@@ -82,7 +82,7 @@ namespace Starship.Azure.Providers.Cosmos {
             try {
                 if(!Collections.ContainsKey(collectionName)) {
                     var result = await CreateCollectionAsync(collectionName);
-                    Collections.Add(collectionName, new AzureDocumentCollection(Client, DatabaseName, result.Resource, SerializerSettings));
+                    Collections.Add(collectionName, new AzureDocumentCollection(Client, DatabaseName, result.Resource, Settings));
                 }
 
                 return Collections[collectionName];

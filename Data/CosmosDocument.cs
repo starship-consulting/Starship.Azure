@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
 using Starship.Core.Security;
@@ -7,7 +9,15 @@ using Starship.Data.Configuration;
 namespace Starship.Azure.Data {
     public class CosmosDocument : Document {
 
-        public bool IsSystemData() {
+        public bool IsSystemType() {
+            return Type == "group" || Type == "account";
+        }
+
+        public bool HasParticipant(string id) {
+            return Participants != null && Participants.Any(participant => participant.Id == id);
+        }
+
+        public bool IsPublicRecord() {
             return Owner == GlobalDataSettings.SystemOwnerName;
         }
         
@@ -30,8 +40,8 @@ namespace Starship.Azure.Data {
         }
         
         [Secure, JsonProperty(PropertyName="creationDate")]
-        public DateTime? CreationDate {
-            get => GetPropertyValue<DateTime?>("creationDate");
+        public DateTime CreationDate {
+            get => GetPropertyValue<DateTime>("creationDate");
             set => SetPropertyValue("creationDate", value);
         }
         
@@ -45,6 +55,12 @@ namespace Starship.Azure.Data {
         public DateTime? ImportDate {
             get => GetPropertyValue<DateTime?>("importDate");
             set => SetPropertyValue("importDate", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="participants")]
+        public List<EntityParticipant> Participants {
+            get => GetPropertyValue<List<EntityParticipant>>("participants");
+            set => SetPropertyValue("participants", value);
         }
     }
 }

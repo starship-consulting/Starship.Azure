@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Starship.Core.Security;
+using Starship.Data.Configuration;
 
 namespace Starship.Azure.Data {
     public class Account : CosmosDocument {
@@ -14,14 +16,81 @@ namespace Starship.Azure.Data {
 
             return Role.ToLower() == "admin";
         }
-        
-        public PermissionTypes GetPermission(CosmosDocument entity) {
-            
-            if(entity == null) {
-                return PermissionTypes.Full;
+
+        public bool CanDelete(CosmosDocument entity) {
+
+            if(entity.IsSystemType() || entity.Owner == GlobalDataSettings.SystemOwnerName) {
+                return false;
             }
 
-            var permission = PermissionTypes.Full;
+            if(IsAdmin()) {
+                return true;
+            }
+            
+            return entity.Owner == Id;
+        }
+
+        public bool CanUpdate(CosmosDocument entity) {
+
+            if(entity.Type == "account") {
+                return false;
+            }
+
+            if(IsAdmin()) {
+                return true;
+            }
+            
+            return CanRead(entity);
+        }
+
+        public bool CanRead(CosmosDocument entity) {
+
+            if(IsAdmin()) {
+                return true;
+            }
+
+            if(entity.Owner == Id || entity.Participants.Any(participant => participant.Id == Id)) {
+                return true;
+            }
+
+            if(entity.Type == "account") {
+                return entity.GetPropertyValue<List<string>>("groups").Any(group => Groups.Contains(group));
+            }
+
+            return false;
+        }
+
+        public bool HasRight(CosmosDocument entity, AccessRight right) {
+
+            var rights = GetRights(entity).ToList();
+
+            if(rights.Contains(AccessRight.Full)) {
+                return true;
+            }
+
+            if(right == AccessRight.Read && (rights.Contains(AccessRight.Update) || rights.Contains(AccessRight.Delete))) {
+                return true;
+            }
+
+            return rights.Contains(right);
+        }
+        
+        public IEnumerable<AccessRight> GetRights(CosmosDocument entity) {
+            
+            var rights = new List<AccessRight>();
+
+            if(entity == null) {
+                rights.Add(AccessRight.Full);
+                return rights;
+            }
+
+            return GetClaims()
+                .Where(each => each.Type == "*" || each.Type == entity.Type)
+                .Where(each => each.Scope == "*" || each.Scope == entity.Owner || each.Scope == entity.Id)
+                .SelectMany(each => each.Rights)
+                .Select(each => (AccessRight) Enum.Parse(typeof(AccessRight), each));
+
+            /*var permission = PermissionTypes.Full;
 
             if(entity.Type == "account") {
                 permission = PermissionTypes.Partial;
@@ -30,14 +99,51 @@ namespace Starship.Azure.Data {
             if(string.IsNullOrEmpty(entity.Id) || string.IsNullOrEmpty(entity.Owner)) {
                 return PermissionTypes.Full;
             }
+
+            var claims = GetClaims();
             
-            if(IsAdmin() || entity.Id == Id || entity.Owner == Id || entity.IsSystemData()) {
+            if(IsAdmin() || entity.Id == Id || claims.Contains(entity.Owner)) {
                 return permission;
             }
             
-            return PermissionTypes.None;
+            return PermissionTypes.None;*/
+        }
+
+        public bool HasClaim(string type, string scope, string right) {
+
+            if(IsAdmin()) {
+                return true;
+            }
+
+            return false;
+            //return GetClaims().Contains(type);
+        }
+
+        private List<AccessClaim> GetDefaultClaims() {
+
+            return new List<AccessClaim> {
+                new AccessClaim("*", Id, "*"),
+                new AccessClaim("*", GlobalDataSettings.SystemOwnerName, "read")
+                //new AccessClaim("*", $"owner = '{Id}'", "*"),
+                //new AccessClaim("*", $"owner = '{GlobalDataSettings.SystemOwnerName}'", "read")
+            };
         }
         
+        public List<AccessClaim> GetClaims() {
+
+            var claims = GetDefaultClaims();
+
+            if(Claims != null && Claims.Any()) {
+                claims.AddRange(Claims.ToList());
+            }
+
+            return claims;
+        }
+        
+        public string GetName() {
+            return FirstName + " " + LastName;
+        }
+
         [Secure, JsonProperty(PropertyName="email")]
         public string Email {
             get => GetPropertyValue<string>("email");
@@ -87,9 +193,15 @@ namespace Starship.Azure.Data {
         }
 
         [Secure, JsonProperty(PropertyName="lastLogin")]
-        public DateTime LastLogin {
-            get => GetPropertyValue<DateTime>("lastLogin");
+        public DateTime? LastLogin {
+            get => GetPropertyValue<DateTime?>("lastLogin");
             set => SetPropertyValue("lastLogin", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="referrer")]
+        public string Referrer {
+            get => GetPropertyValue<string>("referrer");
+            set => SetPropertyValue("referrer", value);
         }
 
         [Secure, JsonProperty(PropertyName="isTrial")]
@@ -114,6 +226,18 @@ namespace Starship.Azure.Data {
         public string Role {
             get => GetPropertyValue<string>("role");
             set => SetPropertyValue("role", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="claims")]
+        public List<AccessClaim> Claims {
+            get => GetPropertyValue<List<AccessClaim>>("claims");
+            set => SetPropertyValue("claims", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="groups")]
+        public List<string> Groups {
+            get => GetPropertyValue<List<string>>("groups");
+            set => SetPropertyValue("groups", value);
         }
     }
 }

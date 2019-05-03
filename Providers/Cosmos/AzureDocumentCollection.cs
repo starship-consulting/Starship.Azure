@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
+using Starship.Azure.Data;
+using Starship.Data.Configuration;
 
 namespace Starship.Azure.Providers.Cosmos {
 
     public class AzureDocumentCollection {
 
-        public AzureDocumentCollection(DocumentClient client, string databaseName, DocumentCollection collection, JsonSerializerSettings settings) {
+        public AzureDocumentCollection(DocumentClient client, string databaseName, DocumentCollection collection, DataSettings settings) {
             Client = client;
             DatabaseName = databaseName;
             Collection = collection;
@@ -19,17 +21,17 @@ namespace Starship.Azure.Providers.Cosmos {
         }
         
         public async Task BulkDelete() {
+            await BulkDelete("SELECT c._self FROM c");
+        }
+
+        public async Task BulkDelete(string query) {
+
             BulkDeletionState state;
 
             do {
-                state = await BulkDelete("SELECT c._self FROM c");
+                state = await CallProcedure<BulkDeletionState>("bulkDelete", query);
             }
             while(state.Continuation);
-        }
-
-        public async Task<BulkDeletionState> BulkDelete(string query) {
-            var procedure = await CallProcedure<BulkDeletionState>("bulkDelete", query);
-            return procedure.Response;
         }
         
         public async Task<List<T>> CallProcedure<T>(string procedureName, List<Resource> parameters) {
@@ -49,13 +51,14 @@ namespace Starship.Azure.Providers.Cosmos {
             return JsonConvert.DeserializeObject<List<Document>>(result.Response);
         }
 
-        public async Task<Document> SaveAsync(object entity) {
-            
-            /*if(entity is Document) {
-                throw new Exception("Never save objects inheriting from Document!  Data corruption will occur.");
-            }*/
+        public async Task<List<Document>> SaveAsync(List<CosmosDocument> documents) {
+            var uri = UriFactory.CreateStoredProcedureUri(DatabaseName, Collection.Id, Settings.SaveProcedureName);
+            var result = await Client.ExecuteStoredProcedureAsync<string>(uri, documents);
+            return JsonConvert.DeserializeObject<List<Document>>(result.Response);
+        }
 
-            var result = await Client.UpsertDocumentAsync(GetDocumentUri(), entity, new RequestOptions { JsonSerializerSettings = Settings });
+        public async Task<Document> SaveAsync(CosmosDocument entity) {
+            var result = await Client.UpsertDocumentAsync(GetDocumentUri(), entity, new RequestOptions { JsonSerializerSettings = Settings.SerializerSettings });
             return result.Resource;
         }
 
@@ -132,7 +135,7 @@ namespace Starship.Azure.Providers.Cosmos {
 
         private DocumentClient Client { get; set; }
 
-        private JsonSerializerSettings Settings { get; set; }
+        private DataSettings Settings { get; set; }
 
         private FeedOptions Options { get; set; }
     }
