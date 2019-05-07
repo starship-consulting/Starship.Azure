@@ -57,6 +57,11 @@ namespace Starship.Azure.Providers.Cosmos {
             return JsonConvert.DeserializeObject<List<Document>>(result.Response);
         }
 
+        public Document Save(CosmosDocument entity) {
+            var result = Client.UpsertDocumentAsync(GetDocumentUri(), entity, new RequestOptions { JsonSerializerSettings = Settings.SerializerSettings }).Result;
+            return result.Resource;
+        }
+
         public async Task<Document> SaveAsync(CosmosDocument entity) {
             var result = await Client.UpsertDocumentAsync(GetDocumentUri(), entity, new RequestOptions { JsonSerializerSettings = Settings.SerializerSettings });
             return result.Resource;

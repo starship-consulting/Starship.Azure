@@ -2,12 +2,61 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using Starship.Core.Extensions;
 using Starship.Core.Security;
 using Starship.Data.Configuration;
 
 namespace Starship.Azure.Data {
     public class Account : CosmosDocument {
         
+        public Account() {
+            Type = "account";
+        }
+
+        public bool HasGroup(string id) {
+            return GetGroups().Contains(id);
+        }
+
+        public List<string> GetGroups() {
+            if(Groups == null) {
+                return new List<string>();
+            }
+
+            return Groups.ToList();
+        }
+
+        public void RemoveGroup(string id) {
+            if(HasGroup(id)) {
+                var groups = GetGroups();
+                groups.Remove(id);
+                Groups = groups.ToList();
+            }
+        }
+
+        public void AddGroup(string id) {
+            var groups = GetGroups();
+            groups.Add(id);
+            Groups = groups.ToList();
+        }
+
+        public bool IsCoordinator() {
+
+            if(string.IsNullOrEmpty(Role)) {
+                return false;
+            }
+
+            return Role.ToLower() == "coordinator";
+        }
+
+        public bool IsManager() {
+
+            if(string.IsNullOrEmpty(Role)) {
+                return false;
+            }
+
+            return Role.ToLower() == "manager";
+        }
+
         public bool IsAdmin() {
 
             if(string.IsNullOrEmpty(Role)) {
@@ -49,12 +98,19 @@ namespace Starship.Azure.Data {
                 return true;
             }
 
-            if(entity.Owner == Id || entity.Participants.Any(participant => participant.Id == Id)) {
+            var participants = GetParticipants().Select(each => each.Id).ToList();
+            var groups = GetGroups();
+
+            if(entity.Owner == Id
+               || participants.Contains(entity.Owner)
+               || participants.Contains(entity.Id)
+               || entity.Participants.Any(participant => participant.Id == Id)
+               || groups.Contains(entity.Owner)) {
                 return true;
             }
 
             if(entity.Type == "account") {
-                return entity.GetPropertyValue<List<string>>("groups").Any(group => Groups.Contains(group));
+                return entity.GetPropertyValue<List<string>>("groups").Any(group => groups.Contains(group));
             }
 
             return false;
@@ -143,17 +199,52 @@ namespace Starship.Azure.Data {
         public string GetName() {
             return FirstName + " " + LastName;
         }
+        
+        public T GetComponent<T>() where T : new() {
+
+            var components = GetPropertyValue<AccountComponents>("components");
+
+            if(components == null) {
+                return new T();
+            }
+            
+            var key = GetComponentKey(typeof(T));
+
+            if(components.ContainsKey(key)) {
+                return components[key].Clone<T>();
+            }
+            
+            return new T();
+        }
+
+        public void SetComponent<T>(T component) where T : new() {
+            
+            var components = GetPropertyValue<AccountComponents>("components");
+
+            if(components == null) {
+                components = new AccountComponents();
+            }
+
+            var key = GetComponentKey(typeof(T));
+
+            if(!components.ContainsKey(key)) {
+                components.Add(key, component);
+            }
+            else {
+                components[key] = component;
+            }
+
+            SetPropertyValue("components", components);
+        }
+
+        private string GetComponentKey(Type type) {
+            return type.Name.Replace("Component", "").CamelCase();
+        }
 
         [Secure, JsonProperty(PropertyName="email")]
         public string Email {
             get => GetPropertyValue<string>("email");
             set => SetPropertyValue("email", value);
-        }
-
-        [Secure, JsonProperty(PropertyName="chargeBeeId")]
-        public string ChargeBeeId {
-            get => GetPropertyValue<string>("chargeBeeId");
-            set => SetPropertyValue("chargeBeeId", value);
         }
 
         [Secure, JsonProperty(PropertyName="outboundEmail")]
@@ -198,24 +289,6 @@ namespace Starship.Azure.Data {
             set => SetPropertyValue("lastLogin", value);
         }
 
-        [Secure, JsonProperty(PropertyName="referrer")]
-        public string Referrer {
-            get => GetPropertyValue<string>("referrer");
-            set => SetPropertyValue("referrer", value);
-        }
-
-        [Secure, JsonProperty(PropertyName="isTrial")]
-        public bool IsTrial {
-            get => GetPropertyValue<bool>("isTrial");
-            set => SetPropertyValue("isTrial", value);
-        }
-
-        [Secure, JsonProperty(PropertyName="subscriptionEndDate")]
-        public DateTime SubscriptionEndDate {
-            get => GetPropertyValue<DateTime>("subscriptionEndDate");
-            set => SetPropertyValue("subscriptionEndDate", value);
-        }
-
         [Secure, JsonProperty(PropertyName="signature")]
         public string Signature {
             get => GetPropertyValue<string>("signature");
@@ -237,7 +310,13 @@ namespace Starship.Azure.Data {
         [Secure, JsonProperty(PropertyName="groups")]
         public List<string> Groups {
             get => GetPropertyValue<List<string>>("groups");
-            set => SetPropertyValue("groups", value);
+            private set => SetPropertyValue("groups", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="chargeBeeId")]
+        public string ChargeBeeId {
+            get => GetPropertyValue<string>("chargeBeeId");
+            private set => SetPropertyValue("chargeBeeId", value);
         }
     }
 }

@@ -8,17 +8,39 @@ using Starship.Data.Configuration;
 
 namespace Starship.Azure.Data {
     public class CosmosDocument : Document {
+        
+        public CosmosDocument() {
+            CreationDate = DateTime.UtcNow;
+        }
 
         public bool IsSystemType() {
             return Type == "group" || Type == "account";
         }
 
-        public bool HasParticipant(string id) {
-            return Participants != null && Participants.Any(participant => participant.Id == id);
-        }
-
         public bool IsPublicRecord() {
             return Owner == GlobalDataSettings.SystemOwnerName;
+        }
+
+        public bool HasParticipant(string id) {
+            return GetParticipants().Any(participant => participant.Id == id);
+        }
+
+        public List<EntityParticipant> GetParticipants() {
+            if(Participants == null) {
+                return new List<EntityParticipant>();
+            }
+
+            return Participants.ToList();
+        }
+
+        public void AddParticipant(string key, string value = "") {
+            AddParticipant(new EntityParticipant(key, value));
+        }
+
+        public void AddParticipant(EntityParticipant participant) {
+            var accountClaims = GetParticipants();
+            accountClaims.Add(participant);
+            Participants = accountClaims.ToList();
         }
         
         [JsonProperty(PropertyName="owner")]
@@ -60,7 +82,7 @@ namespace Starship.Azure.Data {
         [Secure, JsonProperty(PropertyName="participants")]
         public List<EntityParticipant> Participants {
             get => GetPropertyValue<List<EntityParticipant>>("participants");
-            set => SetPropertyValue("participants", value);
+            private set => SetPropertyValue("participants", value);
         }
     }
 }
