@@ -43,7 +43,7 @@ namespace Starship.Azure.Data {
             Participants = accountClaims.ToList();
         }
         
-        [JsonProperty(PropertyName="owner")]
+        [Secure, JsonProperty(PropertyName="owner")]
         public string Owner {
             get => GetPropertyValue<string>("owner");
             set => SetPropertyValue("owner", value);
@@ -54,7 +54,16 @@ namespace Starship.Azure.Data {
             get => GetPropertyValue<DateTime?>("validUntil");
             set => SetPropertyValue("validUntil", value);
         }
-        
+
+        [Secure, JsonProperty(PropertyName="updatedBy")]
+        public string UpdatedBy {
+            get => GetPropertyValue<string>("updatedBy");
+            set => SetPropertyValue("updatedBy", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="updatedDate")]
+        public DateTime? UpdatedDate => Timestamp;
+
         [JsonProperty(PropertyName="$type")]
         public string Type {
             get => GetPropertyValue<string>("$type");
@@ -79,7 +88,7 @@ namespace Starship.Azure.Data {
             set => SetPropertyValue("importDate", value);
         }
 
-        [Secure, JsonProperty(PropertyName="participants")]
+        [JsonProperty(PropertyName="participants")]
         public List<EntityParticipant> Participants {
             get => GetPropertyValue<List<EntityParticipant>>("participants");
             private set => SetPropertyValue("participants", value);

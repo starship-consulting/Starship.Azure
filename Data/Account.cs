@@ -79,33 +79,28 @@ namespace Starship.Azure.Data {
             return entity.Owner == Id;
         }
 
-        public bool CanUpdate(CosmosDocument entity) {
+        public bool CanUpdate(CosmosDocument entity, List<string> shares) {
 
-            if(entity.Type == "account") {
-                return false;
+            if(entity.Type == "account" && Id == entity.Id) {
+                return true;
             }
 
             if(IsAdmin()) {
                 return true;
             }
             
-            return CanRead(entity);
+            return CanRead(entity, shares);
         }
 
-        public bool CanRead(CosmosDocument entity) {
+        public bool CanRead(CosmosDocument entity, List<string> shares) {
 
             if(IsAdmin()) {
                 return true;
             }
-
-            var participants = GetParticipants().Select(each => each.Id).ToList();
+            
             var groups = GetGroups();
 
-            if(entity.Owner == Id
-               || participants.Contains(entity.Owner)
-               || participants.Contains(entity.Id)
-               || entity.Participants.Any(participant => participant.Id == Id)
-               || groups.Contains(entity.Owner)) {
+            if(entity.Owner == Id || shares.Contains(entity.Owner) || shares.Contains(entity.Id)) {
                 return true;
             }
 
@@ -277,7 +272,7 @@ namespace Starship.Azure.Data {
             set => SetPropertyValue("lastName", value);
         }
 
-        [JsonProperty(PropertyName="photo")]
+        [Secure, JsonProperty(PropertyName="photo")]
         public string Photo {
             get => GetPropertyValue<string>("photo");
             set => SetPropertyValue("photo", value);
@@ -289,7 +284,7 @@ namespace Starship.Azure.Data {
             set => SetPropertyValue("lastLogin", value);
         }
 
-        [Secure, JsonProperty(PropertyName="signature")]
+        [JsonProperty(PropertyName="signature")]
         public string Signature {
             get => GetPropertyValue<string>("signature");
             set => SetPropertyValue("signature", value);
@@ -311,12 +306,6 @@ namespace Starship.Azure.Data {
         public List<string> Groups {
             get => GetPropertyValue<List<string>>("groups");
             private set => SetPropertyValue("groups", value);
-        }
-
-        [Secure, JsonProperty(PropertyName="chargeBeeId")]
-        public string ChargeBeeId {
-            get => GetPropertyValue<string>("chargeBeeId");
-            private set => SetPropertyValue("chargeBeeId", value);
         }
     }
 }
