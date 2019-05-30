@@ -38,7 +38,7 @@ namespace Starship.Azure.Data {
             groups.Add(id);
             Groups = groups.ToList();
         }
-
+        
         public bool IsCoordinator() {
 
             if(string.IsNullOrEmpty(Role)) {
@@ -100,101 +100,33 @@ namespace Starship.Azure.Data {
             
             var groups = GetGroups();
 
-            if(entity.Owner == Id || shares.Contains(entity.Owner) || shares.Contains(entity.Id)) {
+            if(entity.Owner == Id || shares.Contains(entity.Owner) || shares.Contains(entity.Id) || entity.Participants.Any(participant => participant.Id == Id)) {
                 return true;
             }
-
+            
             if(entity.Type == "account") {
                 return entity.GetPropertyValue<List<string>>("groups").Any(group => groups.Contains(group));
             }
 
             return false;
         }
-
-        public bool HasRight(CosmosDocument entity, AccessRight right) {
-
-            var rights = GetRights(entity).ToList();
-
-            if(rights.Contains(AccessRight.Full)) {
-                return true;
-            }
-
-            if(right == AccessRight.Read && (rights.Contains(AccessRight.Update) || rights.Contains(AccessRight.Delete))) {
-                return true;
-            }
-
-            return rights.Contains(right);
-        }
-        
-        public IEnumerable<AccessRight> GetRights(CosmosDocument entity) {
-            
-            var rights = new List<AccessRight>();
-
-            if(entity == null) {
-                rights.Add(AccessRight.Full);
-                return rights;
-            }
-
-            return GetClaims()
-                .Where(each => each.Type == "*" || each.Type == entity.Type)
-                .Where(each => each.Scope == "*" || each.Scope == entity.Owner || each.Scope == entity.Id)
-                .SelectMany(each => each.Rights)
-                .Select(each => (AccessRight) Enum.Parse(typeof(AccessRight), each));
-
-            /*var permission = PermissionTypes.Full;
-
-            if(entity.Type == "account") {
-                permission = PermissionTypes.Partial;
-            }
-
-            if(string.IsNullOrEmpty(entity.Id) || string.IsNullOrEmpty(entity.Owner)) {
-                return PermissionTypes.Full;
-            }
-
-            var claims = GetClaims();
-            
-            if(IsAdmin() || entity.Id == Id || claims.Contains(entity.Owner)) {
-                return permission;
-            }
-            
-            return PermissionTypes.None;*/
-        }
-
-        public bool HasClaim(string type, string scope, string right) {
-
-            if(IsAdmin()) {
-                return true;
-            }
-
-            return false;
-            //return GetClaims().Contains(type);
-        }
-
-        private List<AccessClaim> GetDefaultClaims() {
-
-            return new List<AccessClaim> {
-                new AccessClaim("*", Id, "*"),
-                new AccessClaim("*", GlobalDataSettings.SystemOwnerName, "read")
-                //new AccessClaim("*", $"owner = '{Id}'", "*"),
-                //new AccessClaim("*", $"owner = '{GlobalDataSettings.SystemOwnerName}'", "read")
-            };
-        }
-        
-        public List<AccessClaim> GetClaims() {
-
-            var claims = GetDefaultClaims();
-
-            if(Claims != null && Claims.Any()) {
-                claims.AddRange(Claims.ToList());
-            }
-
-            return claims;
-        }
         
         public string GetName() {
+
+            if(LastName.Contains("@") && FirstName.Contains("@")) {
+                return FirstName;
+            }
+
             return FirstName + " " + LastName;
         }
         
+        public Account UpdateComponent<T>(Action<T> action) where T : new() {
+            var component = GetComponent<T>();
+            action(component);
+            SetComponent(component);
+            return this;
+        }
+
         public T GetComponent<T>() where T : new() {
 
             var components = GetPropertyValue<AccountComponents>("components");
@@ -295,17 +227,17 @@ namespace Starship.Azure.Data {
             get => GetPropertyValue<string>("role");
             set => SetPropertyValue("role", value);
         }
-
-        [Secure, JsonProperty(PropertyName="claims")]
-        public List<AccessClaim> Claims {
-            get => GetPropertyValue<List<AccessClaim>>("claims");
-            set => SetPropertyValue("claims", value);
-        }
-
+        
         [Secure, JsonProperty(PropertyName="groups")]
         public List<string> Groups {
             get => GetPropertyValue<List<string>>("groups");
             private set => SetPropertyValue("groups", value);
+        }
+
+        [Secure, JsonProperty(PropertyName="policies")]
+        public List<CosmosPolicy> Policies {
+            get => GetPropertyValue<List<CosmosPolicy>>("policies");
+            set => SetPropertyValue("policies", value);
         }
     }
 }

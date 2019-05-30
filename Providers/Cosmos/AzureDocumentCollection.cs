@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -40,9 +41,9 @@ namespace Starship.Azure.Providers.Cosmos {
             return JsonConvert.DeserializeObject<List<T>>(result.Response);
         }
 
-        public async Task<StoredProcedureResponse<T>> CallProcedure<T>(string procedureName, string parameter) {
+        public async Task<StoredProcedureResponse<T>> CallProcedure<T>(string procedureName, params dynamic[] parameters) {
             var uri = UriFactory.CreateStoredProcedureUri(DatabaseName, Collection.Id, procedureName);
-            return await Client.ExecuteStoredProcedureAsync<T>(uri, parameter);
+            return await Client.ExecuteStoredProcedureAsync<T>(uri, parameters);
         }
 
         public async Task<List<Document>> CallProcedure(string procedureName, string partitionKey, List<Document> parameters) {
@@ -67,7 +68,16 @@ namespace Starship.Azure.Providers.Cosmos {
             return result.Resource;
         }
 
+        public IOrderedQueryable<CosmosDocument> Get(Type type) {
+            var method = GetType().GetMethod("InternalGet", BindingFlags.NonPublic | BindingFlags.Instance);
+            return method.MakeGenericMethod(type).Invoke(this, null) as IOrderedQueryable<CosmosDocument>;
+        }
+
         public IOrderedQueryable<T> Get<T>() {
+            return InternalGet<T>();
+        }
+
+        private IOrderedQueryable<T> InternalGet<T>() {
             return Client.CreateDocumentQuery<T>(GetCollectionUri(), new FeedOptions { EnableCrossPartitionQuery = true, MaxItemCount = -1 });
         }
 
@@ -95,6 +105,10 @@ namespace Starship.Azure.Providers.Cosmos {
 
         public async Task DeleteAsync() {
             await Client.DeleteDocumentCollectionAsync(GetCollectionUri());
+        }
+
+        public async Task DeleteAsync(CosmosDocument document) {
+            await Client.DeleteDocumentAsync(document.SelfLink);
         }
 
         public async Task DeleteAsync(string id) {

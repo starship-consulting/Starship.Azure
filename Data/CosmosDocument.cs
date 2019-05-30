@@ -33,6 +33,10 @@ namespace Starship.Azure.Data {
             return Participants.ToList();
         }
 
+        public void RemoveParticipant(string key) {
+            Participants = GetParticipants().Where(each => each.Id != key).ToList();
+        }
+
         public void AddParticipant(string key, string value = "") {
             AddParticipant(new EntityParticipant(key, value));
         }
@@ -92,6 +96,12 @@ namespace Starship.Azure.Data {
         public List<EntityParticipant> Participants {
             get => GetPropertyValue<List<EntityParticipant>>("participants");
             private set => SetPropertyValue("participants", value);
+        }
+
+        [JsonProperty(PropertyName="permissions")]
+        public List<CosmosPermission> Permissions {
+            get => GetPropertyValue<List<CosmosPermission>>("permissions");
+            set => SetPropertyValue("permissions", value);
         }
     }
 }

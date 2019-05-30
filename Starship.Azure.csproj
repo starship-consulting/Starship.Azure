@@ -232,10 +232,10 @@
     <Compile Include="Data\BaseEntity.cs" />
     <Compile Include="Data\CosmosEvent.cs" />
     <Compile Include="Data\CosmosDocument.cs" />
-    <Compile Include="Data\CosmosResource.cs" />
-    <Compile Include="Data\PermissionEntity.cs" />
+    <Compile Include="Data\CosmosPermission.cs" />
     <Compile Include="Data\ClaimEntity.cs" />
     <Compile Include="Data\Account.cs" />
+    <Compile Include="Data\CosmosPolicy.cs" />
     <Compile Include="Data\DatabaseContext.cs" />
     <Compile Include="Data\DataContextProviderFactory.cs" />
     <Compile Include="Data\EntityFrameworkContextFactory.cs" />
