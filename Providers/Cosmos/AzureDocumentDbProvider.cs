@@ -41,7 +41,8 @@ namespace Starship.Azure.Providers.Cosmos {
 
             var feed = await Client.ReadPartitionKeyRangeFeedAsync(uri, new FeedOptions {
                 RequestContinuation = string.Empty,
-                EnableCrossPartitionQuery = true
+                EnableCrossPartitionQuery = true,
+                MaxItemCount = -1
             });
             
             var changeFeedQuery = Client.CreateDocumentChangeFeedQuery(uri, new ChangeFeedOptions {

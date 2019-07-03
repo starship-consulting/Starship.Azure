@@ -18,7 +18,12 @@ namespace Starship.Azure.Providers.Cosmos {
             DatabaseName = databaseName;
             Collection = collection;
             Settings = settings;
-            Options = new FeedOptions { EnableCrossPartitionQuery = true };
+
+            Options = new FeedOptions {
+                EnableCrossPartitionQuery = true,
+                MaxItemCount = 1000,
+                MaxDegreeOfParallelism = 16
+            };
         }
         
         public async Task BulkDelete() {
@@ -78,11 +83,11 @@ namespace Starship.Azure.Providers.Cosmos {
         }
 
         private IOrderedQueryable<T> InternalGet<T>() {
-            return Client.CreateDocumentQuery<T>(GetCollectionUri(), new FeedOptions { EnableCrossPartitionQuery = true, MaxItemCount = -1 });
+            return Client.CreateDocumentQuery<T>(GetCollectionUri(), Options);
         }
 
         public IOrderedQueryable<dynamic> Get() {
-            return Client.CreateDocumentQuery<dynamic>(GetCollectionUri(), new FeedOptions { EnableCrossPartitionQuery = true });
+            return Client.CreateDocumentQuery<dynamic>(GetCollectionUri(), Options);
         }
 
         public IEnumerable<Document> Get(int take = 0, SqlQuerySpec sqlQuery = null) {
