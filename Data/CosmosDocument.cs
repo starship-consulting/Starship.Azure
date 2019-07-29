@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
+using Starship.Core.Data;
+using Starship.Core.Extensions;
 using Starship.Core.Security;
 using Starship.Data.Configuration;
 
 namespace Starship.Azure.Data {
-    public class CosmosDocument : Document {
+    public class CosmosDocument : CosmosResource {
         
         public CosmosDocument() {
             CreationDate = DateTime.UtcNow;
@@ -49,59 +50,53 @@ namespace Starship.Azure.Data {
         
         [Secure, JsonProperty(PropertyName="owner")]
         public string Owner {
-            get => GetPropertyValue<string>("owner");
-            set => SetPropertyValue("owner", value);
+            get => Get<string>("owner");
+            set => Set("owner", value);
         }
         
         [JsonProperty(PropertyName="validUntil")]
         public DateTime? ValidUntil {
-            get => GetPropertyValue<DateTime?>("validUntil");
-            set => SetPropertyValue("validUntil", value);
+            get => Get<DateTime?>("validUntil");
+            set => Set("validUntil", value);
         }
 
         [Secure, JsonProperty(PropertyName="updatedBy")]
         public string UpdatedBy {
-            get => GetPropertyValue<string>("updatedBy");
-            set => SetPropertyValue("updatedBy", value);
+            get => Get<string>("updatedBy");
+            set => Set("updatedBy", value);
         }
 
         [Secure, JsonProperty(PropertyName="updatedDate")]
-        public DateTime? UpdatedDate => Timestamp;
-
-        [JsonProperty(PropertyName="$type")]
-        public string Type {
-            get => GetPropertyValue<string>("$type");
-            set => SetPropertyValue("$type", value);
-        }
+        public DateTime? UpdatedDate => Get<long>("_ts").FromUnixTimestamp();
         
         [Secure, JsonProperty(PropertyName="creationDate")]
         public DateTime CreationDate {
-            get => GetPropertyValue<DateTime>("creationDate");
-            set => SetPropertyValue("creationDate", value);
+            get => Get<DateTime>("creationDate");
+            set => Set("creationDate", value);
         }
         
         [Secure, JsonProperty(PropertyName="externalId")]
         public string ExternalId {
-            get => GetPropertyValue<string>("externalId");
-            set => SetPropertyValue("externalId", value);
+            get => Get<string>("externalId");
+            set => Set("externalId", value);
         }
         
         [Secure, JsonProperty(PropertyName="importDate")]
         public DateTime? ImportDate {
-            get => GetPropertyValue<DateTime?>("importDate");
-            set => SetPropertyValue("importDate", value);
+            get => Get<DateTime?>("importDate");
+            set => Set("importDate", value);
         }
 
         [JsonProperty(PropertyName="participants")]
         public List<EntityParticipant> Participants {
-            get => GetPropertyValue<List<EntityParticipant>>("participants");
-            private set => SetPropertyValue("participants", value);
+            get => Get<List<EntityParticipant>>("participants");
+            set => Set("participants", value);
         }
 
         [JsonProperty(PropertyName="permissions")]
         public List<CosmosPermission> Permissions {
-            get => GetPropertyValue<List<CosmosPermission>>("permissions");
-            set => SetPropertyValue("permissions", value);
+            get => Get<List<CosmosPermission>>("permissions");
+            set => Set("permissions", value);
         }
     }
 }

@@ -16,27 +16,15 @@ namespace Starship.Azure.Data {
         }
 
         [JsonProperty(PropertyName="name")]
-        public string Name {
-            get => GetPropertyValue<string>("name");
-            set => SetPropertyValue("name", value);
-        }
+        public string Name { get; set; }
 
         [JsonProperty(PropertyName="value")]
-        public string Value {
-            get => GetPropertyValue<string>("value");
-            set => SetPropertyValue("value", value);
-        }
+        public string Value { get; set; }
 
         [JsonProperty(PropertyName="status")]
-        public int Status {
-            get => GetPropertyValue<int>("status");
-            set => SetPropertyValue("status", value);
-        }
+        public int Status { get; set; }
 
         [JsonProperty(PropertyName="level")]
-        public AccessControlLevels Level {
-            get => GetPropertyValue<AccessControlLevels>("level");
-            set => SetPropertyValue("level", value);
-        }
+        public AccessControlLevels Level { get; set; }
     }
 }

@@ -1,30 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 using Starship.Azure.Json;
 using Starship.Core.Extensions;
 using Starship.Data.Configuration;
 
 namespace Starship.Azure.Providers.Cosmos {
-    public class AzureDocumentDbProvider {
+    public class AzureCosmosDbProvider {
         
-        public AzureDocumentDbProvider(DataSettings settings) {
+        public AzureCosmosDbProvider(DataSettings settings) {
 
             Settings = settings;
             ForceCamelcase = true;
-
-            Client = new DocumentClient(new Uri(settings.Uri), settings.Key, new ConnectionPolicy {
-                ConnectionMode = ConnectionMode.Direct,
-                ConnectionProtocol = Protocol.Tcp
+            
+            Client = new CosmosClient(settings.Uri, settings.Key, new CosmosClientOptions {
+                ConnectionMode = ConnectionMode.Direct
             });
-
-            DatabaseName = settings.Database;
-            DatabaseUri = UriFactory.CreateDatabaseUri(DatabaseName);
+            
+            Database = Client.GetDatabase(settings.Database);
 
             SerializerSettings = new JsonSerializerSettings {
                 ContractResolver = new DocumentContractResolver()
@@ -33,7 +29,7 @@ namespace Starship.Azure.Providers.Cosmos {
             DefaultCollection = GetCollectionAsync(settings.Container).Result;
         }
 
-        public async Task<List<Document>> GetLog(DateTime startDate) {
+        /*public async Task<List<Document>> GetLog(DateTime startDate) {
 
             var collection = await GetCollectionAsync(Settings.Container);
 
@@ -58,16 +54,16 @@ namespace Starship.Azure.Providers.Cosmos {
             }
 
             return documents;
-        }
+        }*/
         
-        public IEnumerable<string> GetCollections() {
+        /*public IEnumerable<string> GetCollections() {
             var collections = Client.CreateDocumentCollectionQuery(DatabaseUri);
             return collections.Select(each => each.Id).ToList().OrderBy(each => each).ToList();
-        }
+        }*/
         
-        public async Task<ResourceResponse<DocumentCollection>> CreateCollectionAsync(string collectionName) {
+        public async Task<ContainerResponse> CreateCollectionAsync(string collectionName) {
             collectionName = ResolveCollectionName(collectionName);
-            return await Client.CreateDocumentCollectionIfNotExistsAsync(DatabaseUri, new DocumentCollection { Id =  collectionName }, new RequestOptions{ OfferThroughput = MinimumThroughput });
+            return await Database.CreateContainerIfNotExistsAsync(collectionName, DefaultPartitionKeyPath, MinimumThroughput);
         }
 
         public async Task DeleteCollectionAsync(string collectionName) {
@@ -75,18 +71,18 @@ namespace Starship.Azure.Providers.Cosmos {
             await collection.DeleteAsync();
         }
 
-        public async Task<AzureDocumentCollection> GetCollectionAsync(string collectionName) {
-            collectionName = ResolveCollectionName(collectionName);
+        public async Task<AzureCosmosCollection> GetCollectionAsync(string containerName) {
+            containerName = ResolveCollectionName(containerName);
 
             await Semaphore.WaitAsync();
 
             try {
-                if(!Collections.ContainsKey(collectionName)) {
-                    var result = await CreateCollectionAsync(collectionName);
-                    Collections.Add(collectionName, new AzureDocumentCollection(Client, DatabaseName, result.Resource, Settings));
+                if(!Collections.ContainsKey(containerName)) {
+                    var result = await CreateCollectionAsync(containerName);
+                    Collections.Add(containerName, new AzureCosmosCollection(result.Container, Settings));
                 }
 
-                return Collections[collectionName];
+                return Collections[containerName];
             }
             finally {
                 Semaphore.Release();
@@ -106,20 +102,20 @@ namespace Starship.Azure.Providers.Cosmos {
 
         public DataSettings Settings { get; set; }
 
-        public AzureDocumentCollection DefaultCollection { get; set; }
+        public AzureCosmosCollection DefaultCollection { get; set; }
         
+        private Database Database { get; set; }
+
         private JsonSerializerSettings SerializerSettings { get; set; }
-
-        private string DatabaseName { get; set; }
-
-        private Uri DatabaseUri { get; set; }
-
-        private static readonly Dictionary<string, AzureDocumentCollection> Collections = new Dictionary<string, AzureDocumentCollection>();
+        
+        private static readonly Dictionary<string, AzureCosmosCollection> Collections = new Dictionary<string, AzureCosmosCollection>();
 
         private static readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1, 1);
 
+        private const string DefaultPartitionKeyPath = "/_partitionKey";
+
         private const int MinimumThroughput = 400;
 
-        private static DocumentClient Client { get; set; }
+        private static CosmosClient Client { get; set; }
     }
 }

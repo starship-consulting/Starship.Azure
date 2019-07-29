@@ -129,16 +129,16 @@ namespace Starship.Azure.Data {
 
         public T GetComponent<T>() where T : new() {
 
-            var components = GetPropertyValue<AccountComponents>("components");
+            //var components = Get<AccountComponents>("components");
 
-            if(components == null) {
+            if(Components == null) {
                 return new T();
             }
             
             var key = GetComponentKey(typeof(T));
 
-            if(components.ContainsKey(key)) {
-                return components[key].Clone<T>();
+            if(Components.ContainsKey(key)) {
+                return Components[key].Clone<T>();
             }
             
             return new T();
@@ -146,22 +146,22 @@ namespace Starship.Azure.Data {
 
         public void SetComponent<T>(T component) where T : new() {
             
-            var components = GetPropertyValue<AccountComponents>("components");
+            //var components = Get<AccountComponents>("components");
 
-            if(components == null) {
-                components = new AccountComponents();
+            if(Components == null) {
+                Components = new AccountComponents();
             }
 
             var key = GetComponentKey(typeof(T));
 
-            if(!components.ContainsKey(key)) {
-                components.Add(key, component);
+            if(!Components.ContainsKey(key)) {
+                Components.Add(key, component);
             }
             else {
-                components[key] = component;
+                Components[key] = component;
             }
 
-            SetPropertyValue("components", components);
+            //Set("components", components);
         }
 
         private string GetComponentKey(Type type) {
@@ -170,74 +170,80 @@ namespace Starship.Azure.Data {
 
         [Secure, JsonProperty(PropertyName="email")]
         public string Email {
-            get => GetPropertyValue<string>("email");
-            set => SetPropertyValue("email", value);
+            get => Get<string>("email");
+            set => Set("email", value);
         }
 
         [Secure, JsonProperty(PropertyName="outboundEmail")]
         public string OutboundEmail {
-            get => GetPropertyValue<string>("outboundEmail");
-            set => SetPropertyValue("outboundEmail", value);
+            get => Get<string>("outboundEmail");
+            set => Set("outboundEmail", value);
         }
 
         [Secure, JsonProperty(PropertyName="outboundEmailId")]
         public int OutboundEmailId {
-            get => GetPropertyValue<int>("outboundEmailId");
-            set => SetPropertyValue("outboundEmailId", value);
+            get => Get<int>("outboundEmailId");
+            set => Set("outboundEmailId", value);
         }
 
         [JsonProperty(PropertyName="outboundEmailBCC")]
         public bool OutboundEmailBCC {
-            get => GetPropertyValue<bool>("outboundEmailBCC");
-            set => SetPropertyValue("outboundEmailBCC", value);
+            get => Get<bool>("outboundEmailBCC");
+            set => Set("outboundEmailBCC", value);
         }
 
         [JsonProperty(PropertyName="firstName")]
         public string FirstName {
-            get => GetPropertyValue<string>("firstName");
-            set => SetPropertyValue("firstName", value);
+            get => Get<string>("firstName");
+            set => Set("firstName", value);
         }
 
         [JsonProperty(PropertyName="lastName")]
         public string LastName {
-            get => GetPropertyValue<string>("lastName");
-            set => SetPropertyValue("lastName", value);
+            get => Get<string>("lastName");
+            set => Set("lastName", value);
         }
 
         [Secure, JsonProperty(PropertyName="photo")]
         public string Photo {
-            get => GetPropertyValue<string>("photo");
-            set => SetPropertyValue("photo", value);
+            get => Get<string>("photo");
+            set => Set("photo", value);
         }
 
         [Secure, JsonProperty(PropertyName="lastLogin")]
         public DateTime? LastLogin {
-            get => GetPropertyValue<DateTime?>("lastLogin");
-            set => SetPropertyValue("lastLogin", value);
+            get => Get<DateTime?>("lastLogin");
+            set => Set("lastLogin", value);
         }
 
         [JsonProperty(PropertyName="signature")]
         public string Signature {
-            get => GetPropertyValue<string>("signature");
-            set => SetPropertyValue("signature", value);
+            get => Get<string>("signature");
+            set => Set("signature", value);
         }
 
         [Secure, JsonProperty(PropertyName="role")]
         public string Role {
-            get => GetPropertyValue<string>("role");
-            set => SetPropertyValue("role", value);
+            get => Get<string>("role");
+            set => Set("role", value);
         }
         
         [Secure, JsonProperty(PropertyName="groups")]
         public List<string> Groups {
-            get => GetPropertyValue<List<string>>("groups");
-            private set => SetPropertyValue("groups", value);
+            get => Get<List<string>>("groups");
+            set => Set("groups", value);
         }
 
-        [Secure, JsonProperty(PropertyName="policies")]
+        /*[Secure, JsonProperty(PropertyName="policies")]
         public List<CosmosPolicy> Policies {
-            get => GetPropertyValue<List<CosmosPolicy>>("policies");
-            set => SetPropertyValue("policies", value);
+            get => Get<CosmosPolicy>("policies");
+            set => Set("policies", value);
+        }*/
+
+        [Secure, JsonProperty(PropertyName="components")]
+        public AccountComponents Components {
+            get => Get<AccountComponents>("components");
+            set => Set("components", value);
         }
     }
 }

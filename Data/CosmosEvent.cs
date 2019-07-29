@@ -7,22 +7,13 @@ namespace Starship.Azure.Data {
     public class CosmosEvent : CosmosDocument {
 
         [JsonProperty(PropertyName="name")]
-        public string Name {
-            get => GetPropertyValue<string>("name");
-            set => SetPropertyValue("name", value);
-        }
+        public string Name { get; set; }
 
         [JsonProperty(PropertyName="source")]
-        public CosmosEventSource Source {
-            get => GetPropertyValue<CosmosEventSource>("source");
-            set => SetPropertyValue("source", value);
-        }
+        public CosmosEventSource Source { get; set; }
         
         [JsonProperty(PropertyName="parameters")]
-        public CosmosEventParameters Parameters {
-            get => GetPropertyValue<CosmosEventParameters>("parameters");
-            set => SetPropertyValue("parameters", value);
-        }
+        public CosmosEventParameters Parameters { get; set; }
     }
 
     public class CosmosEventParameters: Dictionary<string, object> {
@@ -30,8 +21,7 @@ namespace Starship.Azure.Data {
         [JsonProperty(PropertyName="date")]
         public DateTime? Date { get; set; }
     }
-
-
+    
     public struct CosmosEventSource {
 
         [JsonProperty(PropertyName="id")]
