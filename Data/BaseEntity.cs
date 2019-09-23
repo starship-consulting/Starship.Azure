@@ -14,6 +14,10 @@ namespace Starship.Azure.Data {
             return Id.ToString();
         }
 
+        public void SetId(object value) {
+            Id = int.Parse(value.ToString());
+        }
+
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 

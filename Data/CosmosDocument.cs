@@ -1,51 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Azure.Cosmos.Linq;
 using Newtonsoft.Json;
-using Starship.Core.Data;
 using Starship.Core.Extensions;
 using Starship.Core.Security;
 using Starship.Data.Configuration;
+using Starship.Data.Entities;
 
 namespace Starship.Azure.Data {
-    public class CosmosDocument : CosmosResource {
+
+    public class CosmosDocument : DocumentEntity {
         
         public CosmosDocument() {
             CreationDate = DateTime.UtcNow;
         }
 
         public bool IsSystemType() {
-            return Type == "group" || Type == "account";
+            return Type == "account";
         }
 
         public bool IsPublicRecord() {
             return Owner == GlobalDataSettings.SystemOwnerName;
-        }
-
-        public bool HasParticipant(string id) {
-            return GetParticipants().Any(participant => participant.Id == id);
-        }
-
-        public List<EntityParticipant> GetParticipants() {
-            if(Participants == null) {
-                return new List<EntityParticipant>();
-            }
-
-            return Participants.ToList();
-        }
-
-        public void RemoveParticipant(string key) {
-            Participants = GetParticipants().Where(each => each.Id != key).ToList();
-        }
-
-        public void AddParticipant(string key, string value = "") {
-            AddParticipant(new EntityParticipant(key, value));
-        }
-
-        public void AddParticipant(EntityParticipant participant) {
-            var accountClaims = GetParticipants();
-            accountClaims.Add(participant);
-            Participants = accountClaims.ToList();
         }
         
         [Secure, JsonProperty(PropertyName="owner")]
@@ -69,7 +45,7 @@ namespace Starship.Azure.Data {
         [Secure, JsonProperty(PropertyName="updatedDate")]
         public DateTime? UpdatedDate => Get<long>("_ts").FromUnixTimestamp();
         
-        [Secure, JsonProperty(PropertyName="creationDate")]
+        [JsonProperty(PropertyName="creationDate")]
         public DateTime CreationDate {
             get => Get<DateTime>("creationDate");
             set => Set("creationDate", value);
@@ -87,16 +63,24 @@ namespace Starship.Azure.Data {
             set => Set("importDate", value);
         }
 
-        [JsonProperty(PropertyName="participants")]
-        public List<EntityParticipant> Participants {
-            get => Get<List<EntityParticipant>>("participants");
-            set => Set("participants", value);
-        }
-
         [JsonProperty(PropertyName="permissions")]
         public List<CosmosPermission> Permissions {
             get => Get<List<CosmosPermission>>("permissions");
             set => Set("permissions", value);
+        }
+    }
+
+    public static class CosmosDocumentExtensions {
+
+        public static IQueryable<T> IsValid<T>(this IQueryable<T> queryable, DateTime? asOfDate = null) where T : CosmosDocument {
+
+            var date = DateTime.UtcNow;
+
+            if(asOfDate != null) {
+                date = asOfDate.Value;
+            }
+
+            return queryable.Where(each => !each.ValidUntil.IsDefined() || each.ValidUntil == null || each.ValidUntil > date);
         }
     }
 }

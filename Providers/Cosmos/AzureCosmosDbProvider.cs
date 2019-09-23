@@ -103,7 +103,7 @@ namespace Starship.Azure.Providers.Cosmos {
         public DataSettings Settings { get; set; }
 
         public AzureCosmosCollection DefaultCollection { get; set; }
-        
+
         private Database Database { get; set; }
 
         private JsonSerializerSettings SerializerSettings { get; set; }

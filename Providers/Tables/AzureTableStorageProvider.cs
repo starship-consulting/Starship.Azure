@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Starship.Core.Data;
+using Starship.Core.Interfaces;
 using Starship.Data.OData;
 
 namespace Starship.Azure.Providers.Tables {
@@ -23,7 +24,7 @@ namespace Starship.Azure.Providers.Tables {
             return new ODataClientContext<T>(GetOrCreate<T>());
         }
 
-        public T Add<T>(T entity) {
+        public T Add<T>(T entity) where T : HasId {
             GetOrCreate<T>().Add(AzureTableProvider.MakeTableEntity(entity));
             return entity;
         }

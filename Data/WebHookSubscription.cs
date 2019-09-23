@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
-using Starship.Core.Data;
+using Starship.Data.Entities;
 
 namespace Starship.Azure.Data {
 
-    public class WebHookSubscription : CosmosResource {
+    public class WebHookSubscription : DocumentEntity {
         
         [JsonProperty("apiKey")]
         public string ApiKey {

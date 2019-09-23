@@ -4,17 +4,22 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
 using Starship.Azure.Data;
 using Starship.Core.Data;
+using Starship.Core.Extensions;
+using Starship.Core.Interfaces;
 using Starship.Core.Utility;
 using Starship.Data.Configuration;
+using Starship.Data.Entities;
 
 namespace Starship.Azure.Providers.Cosmos {
 
     public class AzureCosmosCollection : IsDataProvider {
 
         internal AzureCosmosCollection(Container container, DataSettings settings) {
-            ChangeSet = new List<object>();
+
+            ChangeSet = new List<HasId>();
             Container = container;
             Settings = settings;
 
@@ -33,7 +38,7 @@ namespace Starship.Azure.Providers.Cosmos {
             await BulkDelete("SELECT c._self FROM c");
         }*/
 
-        public T Add<T>(T entity) {
+        public T Add<T>(T entity) where T : HasId {
             ChangeSet.Add(entity);
             return entity;
         }
@@ -41,7 +46,7 @@ namespace Starship.Azure.Providers.Cosmos {
         public void Save() {
             lock(ChangeSet) {
                 foreach(var entity in ChangeSet) {
-                    Save(entity);
+                    Save((DocumentEntity)entity);
                 }
 
                 ChangeSet.Clear();
@@ -49,7 +54,7 @@ namespace Starship.Azure.Providers.Cosmos {
         }
 
         public async Task SaveAsync() {
-            List<object> items;
+            List<HasId> items;
 
             lock(ChangeSet) {
                 items = ChangeSet.ToList();
@@ -72,20 +77,17 @@ namespace Starship.Azure.Providers.Cosmos {
         }
         
         public async Task<List<T>> CallProcedure<T>(string procedureName, List<dynamic> documents) {
-
-            var result = await Container.Scripts.ExecuteStoredProcedureAsync<List<T>>(procedureName, PartitionKey.None, documents.ToArray());
-            return result.Resource;
-            //var result = await Client.ExecuteStoredProcedureAsync<string>(uri, parameters);
-            //return JsonConvert.DeserializeObject<List<T>>(result.Response);
+            var result = await Container.Scripts.ExecuteStoredProcedureAsync<string>(procedureName, PartitionKey.None, documents.ToArray());
+            return JsonConvert.DeserializeObject<List<T>>(result.Resource);
         }
 
         public async Task<T> CallProcedure<T>(string procedureName, params dynamic[] parameters) {
+            var result = await Container.Scripts.ExecuteStoredProcedureAsync<string>(procedureName, PartitionKey.None, parameters);
+            return JsonConvert.DeserializeObject<T>(result.Resource);
+        }
 
-            var result = await Container.Scripts.ExecuteStoredProcedureAsync<T>(procedureName, PartitionKey.None, parameters);
-            return result.Resource;
-
-            //var uri = UriFactory.CreateStoredProcedureUri(DatabaseName, Collection.Id, procedureName);
-            //return await Client.ExecuteStoredProcedureAsync<T>(uri, parameters);
+        public async Task CallProcedure(string procedureName, params dynamic[] parameters) {
+            await Container.Scripts.ExecuteStoredProcedureAsync<string>(procedureName, PartitionKey.None, parameters);
         }
 
         /*public async Task<List<Document>> CallProcedure(string procedureName, string partitionKey, List<Document> parameters) {
@@ -94,18 +96,30 @@ namespace Starship.Azure.Providers.Cosmos {
             return JsonConvert.DeserializeObject<List<Document>>(result.Response);
         }*/
 
-        public T Save<T>(T entity) {
+        public T Save<T>(T entity) where T : DocumentEntity {
             var result = Container.UpsertItemAsync(entity).Result;
             return result.Resource;
         }
 
         public async Task<List<T>> SaveAsync<T>(List<dynamic> documents) {
+
+            foreach(var document in documents) {
+                BeforeSave(document);
+            }
+
             return await CallProcedure<T>(Settings.SaveProcedureName, documents);
         }
         
-        public async Task<T> SaveAsync<T>(T entity) {
+        public async Task<T> SaveAsync<T>(T entity) where T : HasId {
+            BeforeSave(entity);
             var result = await Container.UpsertItemAsync(entity);
             return result.Resource;
+        }
+
+        private void BeforeSave(HasId document) {
+            if(document.GetId().IsEmpty()) {
+                document.SetId(Guid.NewGuid().ToString());
+            }
         }
 
         public IQueryable<CosmosDocument> Get(Type type) {
@@ -202,7 +216,7 @@ namespace Starship.Azure.Providers.Cosmos {
         }*/
         
         public string DatabaseName { get; set; }
-
+        
         private Container Container { get; set; }
 
         //private CosmosClient Client { get; set; }
@@ -211,6 +225,6 @@ namespace Starship.Azure.Providers.Cosmos {
 
         private QueryRequestOptions Options { get; set; }
 
-        private List<object> ChangeSet { get; set; }
+        private List<HasId> ChangeSet { get; set; }
     }
 }

@@ -7,7 +7,7 @@ using Starship.Core.Security;
 using Starship.Data.Configuration;
 
 namespace Starship.Azure.Data {
-    public class Account : CosmosDocument {
+    public class Account : CosmosDocument, IsSecurityContext {
         
         public Account() {
             Type = "account";
@@ -29,14 +29,22 @@ namespace Starship.Azure.Data {
             if(HasGroup(id)) {
                 var groups = GetGroups();
                 groups.Remove(id);
-                Groups = groups.ToList();
+                Groups = groups.Where(group => group.Length > 0).ToList();
             }
         }
 
         public void AddGroup(string id) {
             var groups = GetGroups();
             groups.Add(id);
-            Groups = groups.ToList();
+            Groups = groups.Where(group => group.Length > 0).ToList();
+        }
+
+        public bool IsGroupLeader() {
+            if(string.IsNullOrEmpty(Role)) {
+                return false;
+            }
+
+            return Role.ToLower() == "leader";
         }
         
         public bool IsCoordinator() {
@@ -54,7 +62,7 @@ namespace Starship.Azure.Data {
                 return false;
             }
 
-            return Role.ToLower() == "manager";
+            return Role.ToLower() == "manager" || IsGroupLeader();
         }
 
         public bool IsAdmin() {
@@ -120,12 +128,12 @@ namespace Starship.Azure.Data {
             return FirstName + " " + LastName;
         }
         
-        public Account UpdateComponent<T>(Action<T> action) where T : new() {
+        /*public Account UpdateComponent<T>(Action<T> action) where T : new() {
             var component = GetComponent<T>();
             action(component);
             SetComponent(component);
             return this;
-        }
+        }*/
 
         public T GetComponent<T>() where T : new() {
 
@@ -146,22 +154,22 @@ namespace Starship.Azure.Data {
 
         public void SetComponent<T>(T component) where T : new() {
             
-            //var components = Get<AccountComponents>("components");
+            /*var components = Get<Dictionary<string, object>>("components");
 
-            if(Components == null) {
-                Components = new AccountComponents();
+            if(components == null) {
+                components = new Dictionary<string, object>();
             }
 
             var key = GetComponentKey(typeof(T));
 
-            if(!Components.ContainsKey(key)) {
-                Components.Add(key, component);
+            if(!components.ContainsKey(key)) {
+                components.Add(key, component);
             }
             else {
-                Components[key] = component;
+                components[key] = component;
             }
 
-            //Set("components", components);
+            Set("components", component);*/
         }
 
         private string GetComponentKey(Type type) {
@@ -174,6 +182,12 @@ namespace Starship.Azure.Data {
             set => Set("email", value);
         }
 
+        [Secure, JsonProperty(PropertyName="changeEmail")]
+        public string ChangeEmail {
+            get => Get<string>("changeEmail");
+            set => Set("changeEmail", value);
+        }
+        
         [Secure, JsonProperty(PropertyName="outboundEmail")]
         public string OutboundEmail {
             get => Get<string>("outboundEmail");
@@ -234,15 +248,15 @@ namespace Starship.Azure.Data {
             set => Set("groups", value);
         }
 
-        /*[Secure, JsonProperty(PropertyName="policies")]
+        [Secure, JsonProperty(PropertyName="policies")]
         public List<CosmosPolicy> Policies {
-            get => Get<CosmosPolicy>("policies");
+            get => Get<List<CosmosPolicy>>("policies");
             set => Set("policies", value);
-        }*/
+        }
 
         [Secure, JsonProperty(PropertyName="components")]
-        public AccountComponents Components {
-            get => Get<AccountComponents>("components");
+        public Dictionary<string, object> Components {
+            get => Get<Dictionary<string, object>>("components");
             set => Set("components", value);
         }
     }
