@@ -136,9 +136,7 @@ namespace Starship.Azure.Data {
         }*/
 
         public T GetComponent<T>() where T : new() {
-
-            //var components = Get<AccountComponents>("components");
-
+            
             if(Components == null) {
                 return new T();
             }
@@ -152,9 +150,9 @@ namespace Starship.Azure.Data {
             return new T();
         }
 
-        public void SetComponent<T>(T component) where T : new() {
+        /*public void SetComponent<T>(T component) where T : new() {
             
-            /*var components = Get<Dictionary<string, object>>("components");
+            var components = Get<Dictionary<string, object>>("components");
 
             if(components == null) {
                 components = new Dictionary<string, object>();
@@ -169,9 +167,9 @@ namespace Starship.Azure.Data {
                 components[key] = component;
             }
 
-            Set("components", component);*/
-        }
-
+            Set("components", component);
+        }*/
+        
         private string GetComponentKey(Type type) {
             return type.Name.Replace("Component", "").CamelCase();
         }

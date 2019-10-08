@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.Cosmos.Linq;
 using Newtonsoft.Json;
+using Starship.Azure.Json;
 using Starship.Core.Extensions;
 using Starship.Core.Security;
 using Starship.Data.Configuration;
@@ -14,6 +15,47 @@ namespace Starship.Azure.Data {
         
         public CosmosDocument() {
             CreationDate = DateTime.UtcNow;
+        }
+
+        public static CosmosDocument From(object source, string defaultType = "") {
+
+            var settings = new JsonSerializerSettings {
+                ContractResolver = new DocumentContractResolver()
+            };
+            
+            var serialized = JsonConvert.SerializeObject(source, settings);
+            var document = JsonConvert.DeserializeObject<CosmosDocument>(serialized);
+
+            if(document.Type.IsEmpty()) {
+                document.Type = defaultType;
+            }
+
+            if(document.Type == null) {
+                throw new Exception("Unset entity type.");
+            }
+
+            document.Type = document.Type.ToLower();
+
+            return document;
+        }
+
+        public void Apply(IsSecurityContext context, IDictionary<string, object> source, string type) {
+            
+            var properties = type == "account" ? typeof(Account).GetProperties() : typeof(CosmosDocument).GetProperties();
+
+            var editableProperties = source
+                .Where(each => !properties.Any(property => property.Name.ToLower() == each.Key.ToLower() && property.HasAttribute<SecureAttribute>()))
+                .ToList();
+
+            foreach(var property in editableProperties) {
+                Set(property.Key, property.Value);
+            }
+                            
+            UpdatedBy = context.Id;
+
+            if(Owner.IsEmpty()) {
+                Owner = context.Id;
+            }
         }
 
         public bool IsSystemType() {

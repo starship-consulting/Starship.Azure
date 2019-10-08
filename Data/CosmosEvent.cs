@@ -27,8 +27,8 @@ namespace Starship.Azure.Data {
 
     public class CosmosEventParameters: Dictionary<string, object> {
 
-        [JsonProperty(PropertyName="date")]
-        public DateTime? Date { get; set; }
+        //[JsonProperty(PropertyName="date")]
+        //public DateTime? Date { get; set; }
     }
     
     public struct CosmosEventSource {
