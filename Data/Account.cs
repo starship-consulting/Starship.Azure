@@ -135,31 +135,35 @@ namespace Starship.Azure.Data {
             return this;
         }*/
 
-        public T GetComponent<T>() where T : new() {
+        /*public T GetComponent<T>(string key) where T : new() {
+
+            if(Components == null) {
+                Components = new Dictionary<string, object>();
+            }
+            
+            if(!Components.ContainsKey(key)) {
+                Components.Add(key, new T());
+            }
+
+            if(!(Components[key] is T)) {
+                Components[key] = Components[key].Clone<T>();
+            }
+            
+            return (T) Components[key];
+        }*/
+
+        //public T GetComponent<T>() where T : new() {
+        //    return GetComponent<T>(GetComponentKey(typeof(T)));
+        //}
+
+        /*public void SetComponent<T>(T component, string key) where T : new() {
             
             if(Components == null) {
-                return new T();
-            }
-            
-            var key = GetComponentKey(typeof(T));
-
-            if(Components.ContainsKey(key)) {
-                return Components[key].Clone<T>();
-            }
-            
-            return new T();
-        }
-
-        /*public void SetComponent<T>(T component) where T : new() {
-            
-            var components = Get<Dictionary<string, object>>("components");
-
-            if(components == null) {
-                components = new Dictionary<string, object>();
+                Components = new Dictionary<string, object>();
             }
 
-            var key = GetComponentKey(typeof(T));
-
+            var components = Components.Clone<Dictionary<string, object>>();
+            
             if(!components.ContainsKey(key)) {
                 components.Add(key, component);
             }
@@ -167,12 +171,12 @@ namespace Starship.Azure.Data {
                 components[key] = component;
             }
 
-            Set("components", component);
-        }*/
+            Components = components;
+        }
         
         private string GetComponentKey(Type type) {
             return type.Name.Replace("Component", "").CamelCase();
-        }
+        }*/
 
         [Secure, JsonProperty(PropertyName="email")]
         public string Email {
